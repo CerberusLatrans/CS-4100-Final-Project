@@ -44,10 +44,10 @@ with open('map.jpg', 'wb') as file:
 r.close()
 
 # now we repeat this process but with dirty map
-maptype = "satellite"
+maptype2 = "satellite"
 labelsTextOff="feature:all|element:labels.text|visibility: off"
 labelsIconOff="feature:all|element:labels.icon|visibility: off"
-dirty_map = url + "center=" + center + "&zoom=" + str(zoom) + "&size=" + size + "&maptype= " + maptype + "&style=" + labelsTextOff + "&style=" + labelsIconOff + "&key=" + api_key
+dirty_map = url + "center=" + center + "&zoom=" + str(zoom) + "&size=" + size + "&maptype=" + maptype2 +"&key=" + api_key
 print(dirty_map)
 rDirty = requests.get(dirty_map)
 with open('dirtyMap.jpg', 'wb') as file:
