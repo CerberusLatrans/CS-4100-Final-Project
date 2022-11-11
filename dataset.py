@@ -7,6 +7,9 @@
 import requests
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+import random
+import math
+import urllib
 
 # Enter your api key here
 api_key = "AIzaSyATvdjLWeqJ0svqAXNYmdAmVU7tkaz8434" # Prob want this as a google secret through GCP
