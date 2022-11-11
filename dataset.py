@@ -40,9 +40,22 @@ with open('map.jpg', 'wb') as file:
 
 r.close()
 
+# now we repeat this process but with json styling for the clean image
+roadOff="feature:road|visibility: off"
+labelsTextOff="feature:all|element:labels.text|visibility: off"
+labelsIconOff="feature:all|element:labels.icon|visibility: off"
+full_url_styled = url + "center=" + center + "&zoom=" + str(zoom) + "&size=" + size + "&maptype= " + maptype + "&map_id=" + map_id + "&style=" + roadOff + "&style=" + labelsTextOff + "&style=" + labelsIconOff + "&key=" + api_key
+print(full_url_styled)
+rStyled = requests.get(full_url_styled)
+with open('styledMap.jpg', 'wb') as file:
+    file.write(rStyled.content)
+
+rStyled.close()
+
 # using matpltolib to display the image
 plt.figure(figsize=(5, 5))
-img=mpimg.imread('map.jpg')
+img=mpimg.imread('map.jpg') #render the terrain map
+img=mpimg.imread('styledMap.jpg') #render the styled map
 imgplot = plt.imshow(img)
 plt.axis('off')
 plt.show()
