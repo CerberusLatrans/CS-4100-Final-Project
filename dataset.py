@@ -7,9 +7,6 @@
 import requests
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-import urllib.parse
-import random
-import math
 
 # Enter your api key here
 api_key = "AIzaSyATvdjLWeqJ0svqAXNYmdAmVU7tkaz8434" # Prob want this as a google secret through GCP
@@ -35,7 +32,7 @@ map_id = "5fd53f1f4a5c6512"
 # get method of requests module
 # return response object
 full_url = url + "center=" + center + "&zoom=" + str(zoom) + "&size=" + size + "&maptype= " + maptype + "&key=" + api_key + "&map_id=" + map_id
-#print(full_url)
+print(full_url)
 r = requests.get(full_url)
   
 with open('map.jpg', 'wb') as file:
@@ -43,9 +40,22 @@ with open('map.jpg', 'wb') as file:
 
 r.close()
 
+# now we repeat this process but with json styling for the clean image
+roadOff="feature:road|visibility: off"
+labelsTextOff="feature:all|element:labels.text|visibility: off"
+labelsIconOff="feature:all|element:labels.icon|visibility: off"
+full_url_styled = url + "center=" + center + "&zoom=" + str(zoom) + "&size=" + size + "&maptype= " + maptype + "&map_id=" + map_id + "&style=" + roadOff + "&style=" + labelsTextOff + "&style=" + labelsIconOff + "&key=" + api_key
+print(full_url_styled)
+rStyled = requests.get(full_url_styled)
+with open('styledMap.jpg', 'wb') as file:
+    file.write(rStyled.content)
+
+rStyled.close()
+
 # using matpltolib to display the image
 plt.figure(figsize=(5, 5))
-img=mpimg.imread('map.jpg')
+img=mpimg.imread('map.jpg') #render the terrain map
+img=mpimg.imread('styledMap.jpg') #render the styled map
 imgplot = plt.imshow(img)
 plt.axis('off')
 plt.show()
@@ -64,7 +74,6 @@ plt.show()
 
 # TODO: After we generate image, put into GCP bucket by making GCP API call
 
-# creates n uniformly random samples within radius r from the location
 def get_coords(location, n, radius):
     url = 'https://nominatim.openstreetmap.org/search/' + urllib.parse.quote(location) +'?format=json'
     response = requests.get(url).json()
@@ -100,4 +109,3 @@ for l in locations:
     coords.extend(get_coords(l, n=10, radius=5))
 for c in coords:
     upload_to_cloud(c)
-    
