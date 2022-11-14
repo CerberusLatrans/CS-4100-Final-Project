@@ -9,17 +9,29 @@ import cv2 as cv
 import numpy as np
 from io import BytesIO
 from PIL import Image
+# Install Google Libraries
+from google.cloud import secretmanager
+from google.cloud import storage
 
-API_KEY = "AIzaSyATvdjLWeqJ0svqAXNYmdAmVU7tkaz8434" # Prob want this as a google secret through GCP
 URL = "https://maps.googleapis.com/maps/api/staticmap?"
 SIZE = "640x640"
 MAP_ID = "5fd53f1f4a5c6512" # For styling the map -- clean map
 MAP_TYPE = "satellite" # for dirty map
+PROJECT_ID = "289867676635"
+SECRET_KEY = "MAP_API_KEY"
 # center = "42.3398106,-71.0913604" <- northeastern university
 # labelsTextOff="feature:all|element:labels.text|visibility: off"
 # labelsIconOff="feature:all|element:labels.icon|visibility: off"
 
+def get_api_key():
+    client = secretmanager.SecretManagerServiceClient()
+    secret_detail = f"projects/{PROJECT_ID}/secrets/{SECRET_KEY}/versions/1"
+    response = client.access_secret_version(request={"name": secret_detail})
+    data = response.payload.data.decode("UTF-8")
+    return data
+
 def get_map(center, zoom, type, display=False):
+    API_KEY = get_api_key()
     full_url = URL + "center=" + center + "&zoom=" + str(zoom) + "&size=" + SIZE + "&key=" + API_KEY
     if (type == 'clean'):
         full_url += "&map_id=" + MAP_ID 
@@ -36,7 +48,7 @@ def get_map(center, zoom, type, display=False):
     return img
 
 
-def apply_canny(img, type, display=False):
+def apply_canny(img, type, id, display=False):
     """Applies canny filter to image"""
     
     if type == 'dirty':
@@ -52,29 +64,26 @@ def apply_canny(img, type, display=False):
         plt.imshow(edges)
         plt.show()
 
-    return edges
+    file_name = f'images/canny/{type}/{id}.jpg'
+    cv.imwrite(file_name, edges)
 
-def upload_blob(source_file_name): #TODO
-    pass
+    return file_name
+
+def upload_blob(source_file_name, destination_blob_name):
     """Uploads a file to the bucket."""
     # The ID of your GCS bucket
-    # bucket_name = "your-bucket-name"
-    # The path to your file to upload
-    # source_file_name = "local/path/to/file"
-    # The ID of your GCS object
-    # destination_blob_name = "storage-object-name"
+    storage_client = storage.Client()
+    bucket_name = "train_test_dataset"
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(destination_blob_name)
 
-    # storage_client = storage.Client()
-    # bucket = storage_client.bucket(bucket_name)
-    # blob = bucket.blob(destination_blob_name)
+    blob.upload_from_filename(source_file_name)
 
-    # blob.upload_from_filename(source_file_name)
+    print(
+        f"File {source_file_name} uploaded to {destination_blob_name}."
+    )
 
-    # print(
-    #     f"File {source_file_name} uploaded to {destination_blob_name}."
-    # )
-
-def get_coords(location, n, radius):
+def get_coords(id, location, n, radius):
     url = 'https://nominatim.openstreetmap.org/search/' + urllib.parse.quote(location) +'?format=json'
     response = requests.get(url).json()
     anchor_lat = float(response[0]["lat"]) #y
@@ -94,7 +103,7 @@ def get_coords(location, n, radius):
         lon = anchor_lon + random.uniform(-delta_lon, delta_lon)
 
         zoom = random.randint(17, 20)
-        coordinates.append((lat, lon, zoom))
+        coordinates.append((lat, lon, zoom, id))
 
     # print(coordinates)
     return coordinates
@@ -102,24 +111,27 @@ def get_coords(location, n, radius):
 if __name__ == "__main__":
     locations = ["Boston", "New York City"]
     coords = []
+    id = 1
     for l in locations:
-        coords.extend(get_coords(l, n=10, radius=1))
+        coords.extend(get_coords(id, l, n=10, radius=1))
+        id = id + 1
 
     temp_limit = 1
     count = 1
     for c in coords:
         center = str(c[0]) + "," + str(c[1])
         zoom = c[2]
+        id = c[3]
 
         """ Clean Map """
         clean_image = get_map(center, zoom, "clean", display=True)
-        canny_clean_image = apply_canny(clean_image, "clean", display=True)
-        upload_blob(canny_clean_image)
+        canny_clean_image = apply_canny(clean_image, "clean", id, display=True)
+        upload_blob(canny_clean_image, f"clean_train/clean_{id}.jpg")
 
         """ Dirty Map """
         dirty_image = get_map(center, zoom, "dirty", display=True)
-        canny_dirty_image = apply_canny(dirty_image, "dirty", display=True)
-        upload_blob(canny_dirty_image)
+        canny_dirty_image = apply_canny(dirty_image, "dirty", id, display=True)
+        upload_blob(canny_dirty_image, f"satellite_train/dirty_{id}.jpg")
 
         count = count + 1
         if (count > temp_limit):
