@@ -7,10 +7,11 @@ import matplotlib.pyplot as plt
 tensor_transform = transforms.ToTensor()
  
 # Download the MNIST Dataset
+# dataset = "PLACEHOLDER"
 dataset = datasets.MNIST(root = "./data",
                          train = True,
                          download = True,
-                         transform = tensor_transform)
+                         transform = tensor_transform) #loads the MNIST dataset into loader
  
 # DataLoader is used to load the dataset
 # for training
@@ -73,7 +74,7 @@ optimizer = torch.optim.Adam(model.parameters(),
                              lr = 1e-1,
                              weight_decay = 1e-8)
 
-epochs = 20
+epochs = 20 # takes 15 to 20 mins to execute, Initialize epoch = 1, for quick results
 outputs = []
 losses = []
 for epoch in range(epochs):
@@ -96,7 +97,7 @@ for epoch in range(epochs):
             
             # Storing the losses in a list for plotting
             losses.append(loss)
-        outputs.append((epochs, image, reconstructed))
+            outputs.append((epochs, image, reconstructed))
 
 # Defining the Plot Style
 plt.style.use('fivethirtyeight')
@@ -106,13 +107,14 @@ plt.ylabel('Loss')
 # Plotting the last 100 values
 plt.plot(losses[-100:])
 
-
 for i, item in enumerate(image):
-   
   # Reshape the array for plotting
   item = item.reshape(-1, 28, 28)
   plt.imshow(item[0])
- 
+  plt.show()
+
 for i, item in enumerate(reconstructed):
   item = item.reshape(-1, 28, 28)
-  plt.imshow(item[0])
+  with torch.no_grad():
+    plt.imshow(item[0])
+    plt.show()
