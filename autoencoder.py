@@ -7,16 +7,24 @@ import matplotlib.pyplot as plt
 tensor_transform = transforms.ToTensor()
  
 # Download the MNIST Dataset
-# dataset = "PLACEHOLDER"
-dataset = datasets.MNIST(root = "./data",
-                         train = True,
-                         download = True,
-                         transform = tensor_transform) #loads the MNIST dataset into loader
+# dataset = datasets.MNIST(root = "./data",
+#                          train = True,
+#                          download = True,
+#                          transform = tensor_transform) #loads the MNIST dataset into loader
  
+transform = transforms.Compose([
+                                transforms.Resize(255),
+                                transforms.CenterCrop(224),
+                                transforms.ToTensor()
+                                ])
+
+dataset = datasets.ImageFolder('test_image', transform=transform)
+
+
 # DataLoader is used to load the dataset
 # for training
 loader = torch.utils.data.DataLoader(dataset = dataset,
-                                     batch_size = 32,
+                                     batch_size = 1,
                                      shuffle = True)
 
 # Creating a PyTorch class
@@ -74,7 +82,7 @@ optimizer = torch.optim.Adam(model.parameters(),
                              lr = 1e-1,
                              weight_decay = 1e-8)
 
-epochs = 20 # takes 15 to 20 mins to execute, Initialize epoch = 1, for quick results
+epochs = 15 # takes 15 to 20 mins to execute, Initialize epoch = 1, for quick results
 outputs = []
 losses = []
 for epoch in range(epochs):
@@ -106,6 +114,8 @@ plt.ylabel('Loss')
 
 # Plotting the last 100 values
 plt.plot(losses[-100:])
+plt.show()
+
 
 for i, item in enumerate(image):
   # Reshape the array for plotting
