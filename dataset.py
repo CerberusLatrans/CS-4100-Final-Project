@@ -12,6 +12,9 @@ from PIL import Image
 # Install Google Libraries
 from google.cloud import secretmanager
 from google.cloud import storage
+import os
+
+os.environ.setdefault("GCLOUD_PROJECT", "careful-striker-367620")
 
 URL = "https://maps.googleapis.com/maps/api/staticmap?"
 SIZE = "640x640"
@@ -50,9 +53,19 @@ def get_map(center, zoom, type, display=False):
 
 def apply_canny(img, type, id, display=False):
     """Applies canny filter to image"""
-    
+    img = cv.medianBlur(img,5)
     if type == 'dirty':
-        edges = cv.Canny(img, 200, 400)
+
+        ret2,th2 = cv.threshold(img,0,255,cv.THRESH_BINARY+cv.THRESH_OTSU)
+        # Otsu's thresholding after Gaussian filtering
+        blur = cv.GaussianBlur(img,(5,5),0)
+        ret3,th3 = cv.threshold(blur,0,255,cv.THRESH_BINARY+cv.THRESH_OTSU)
+        
+        kernel = np.ones((5,5),np.float32)/25
+        dst = cv.filter2D(img,-1,kernel)
+        edges = cv.Canny(th2, 50, 250)
+        
+        edges2 = cv.Canny(img, 200, 400)
     elif type == 'clean':
         edges = cv.Canny(img, 5, 10)
     else:
@@ -63,6 +76,9 @@ def apply_canny(img, type, id, display=False):
     if display:
         plt.imshow(edges)
         plt.show()
+        if type=="dirty":
+            plt.imshow(edges2)
+            plt.show()
 
     file_name = f'images/canny/{type}/{id}.jpg'
     cv.imwrite(file_name, edges)
@@ -109,28 +125,28 @@ def get_coords(id, location, n, radius):
     return coordinates
 
 if __name__ == "__main__":
-    locations = ["Boston", "New York City"]
+    locations = ["Northeastern University"]
     coords = []
-    id = 1
+    id = 0
     for l in locations:
-        coords.extend(get_coords(id, l, n=10, radius=1))
+        coords.extend(get_coords(id, l, n=20, radius=1))
         id = id + 1
 
-    temp_limit = 1
+    temp_limit = 20
     count = 1
-    for c in coords:
+    for id, c in enumerate(coords):
         center = str(c[0]) + "," + str(c[1])
         zoom = c[2]
-        id = c[3]
+        #id = c[3]
 
         """ Clean Map """
-        clean_image = get_map(center, zoom, "clean", display=True)
-        canny_clean_image = apply_canny(clean_image, "clean", id, display=True)
+        clean_image = get_map(center, zoom, "clean", display=False)
+        canny_clean_image = apply_canny(clean_image, "clean", id, display=False)
         upload_blob(canny_clean_image, f"clean_train/clean_{id}.jpg")
 
         """ Dirty Map """
-        dirty_image = get_map(center, zoom, "dirty", display=True)
-        canny_dirty_image = apply_canny(dirty_image, "dirty", id, display=True)
+        dirty_image = get_map(center, zoom, "dirty", display=False)
+        canny_dirty_image = apply_canny(dirty_image, "dirty", id, display=False)
         upload_blob(canny_dirty_image, f"satellite_train/dirty_{id}.jpg")
 
         count = count + 1
