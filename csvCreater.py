@@ -2,33 +2,29 @@ import pandas as pd
 from google.cloud import storage
 from dataset import upload_blob
 
-
-"""Lists all the blobs in the bucket."""
-# bucket_name = "your-bucket-name"
-
 storage_client = storage.Client()
 
-    # Note: Client.list_blobs requires at least package version 1.17.0.
+"""Lists all the blobs in the bucket."""
 blobs = storage_client.list_blobs('train_test_dataset')
-# blob_names = blobs.name
-list = [element.name for element in blobs]
+
+clean_list = []
+dirty_list = []
+
+for element in blobs:
+    blob_name = element.name
+    if '.' in blob_name and 'clean' in blob_name:
+        clean_list.append(blob_name)
+    elif '.' in blob_name and 'dirty' in blob_name:
+        dirty_list.append(blob_name)
 
 data = {
     'dirty': 
-        list, 
+        dirty_list, 
     'clean': 
-        list
-    
+        clean_list
 }
-df = pd.DataFrame(data)
-df['dirty'] = df[df['dirty'].str.contains('.') == True]
-df['dirty'] = df[df['dirty'].str.contains('dirty') == True]
-df['clean'] = df[df['clean'].str.contains('.') == True]
-df['clean'] = df[df['clean'].str.contains('clean') == True]
 
-
-
-# df = pd.DataFrame(data)
+df = pd.DataFrame(data) # Dataframe containing dirty and clean filenames according to GCS structure
 csv_data = df.to_csv('dataset.csv')
-upload_blob('dataset.csv', 'dataset.csv')
+upload_blob('dataset.csv', 'dataset.csv') # Uploads CSV to GCS
 
