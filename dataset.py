@@ -81,7 +81,7 @@ def apply_canny(img, type, id, display=False):
             plt.show()
 
     file_name = f'images/canny/{type}/{id}.jpg'
-    cv.imwrite(file_name, edges)
+    #cv.imwrite(file_name, edges)
 
     return file_name
 
