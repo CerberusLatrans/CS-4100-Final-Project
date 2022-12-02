@@ -119,17 +119,17 @@ def get_coords(id, location, n, radius):
         lon = anchor_lon + random.uniform(-delta_lon, delta_lon)
 
         zoom = random.randint(17, 20)
-        coordinates.append((lat, lon, zoom, id))
+        coordinates.append((lat, lon, zoom, id)) # each coord is a tuple
 
     # print(coordinates)
     return coordinates
 
 if __name__ == "__main__":
-    locations = ["Northeastern University"]
+    locations = ["Jamaica New York", "Shackamaxon country club", "hillsborough middle school", "phoenixville", "baltimore", "severn maryland", "washington dc", "mayfair california", "maverik center utah", "riverton utah"]
     coords = []
     id = 0
-    for l in locations:
-        coords.extend(get_coords(id, l, n=20, radius=1))
+    for l in locations: # n used to be 20
+        coords.extend(get_coords(id, l, n=1000, radius=1))
         id = id + 1
 
     temp_limit = 20
