@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.image as mpimg
 from PIL import Image
 import requests
-from dataset import get_api_key
+from dataset import get_api_key, get_map
 import tkinter as tk
 from tkinter import simpledialog
 from easygui import *
@@ -37,6 +37,7 @@ def denoise(input, weight_path):
 
     return output_image
 
+# allow user to click starting and ending point on map
 def get_coordinates_from_user_clicks(map_image):
     coords = []
     fig = plt.figure(figsize=(10,8))
@@ -63,6 +64,7 @@ def get_coordinates_from_user_clicks(map_image):
         return None
     return coords
 
+# based on user's input of location and zoom, get the map (with labels)
 def get_map_from_location(location, zoom, display=False):
     url = "https://maps.googleapis.com/maps/api/staticmap?"
     size = "640x640"
@@ -103,3 +105,6 @@ if __name__ == "__main__":
         end = coords[1]
         print("Starting: " + str(start))
         print("Ending: " + str(end))
+
+    # Do rest of the process
+    clean_map = get_map(location, zoom, 'clean', True)
