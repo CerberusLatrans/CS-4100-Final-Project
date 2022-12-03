@@ -1,36 +1,77 @@
-# creates n uniformly random samples within radius r from the location
-def get_coords(location, n, radius):
-    url = 'https://nominatim.openstreetmap.org/search/' + urllib.parse.quote(location) +'?format=json'
-    response = requests.get(url).json()
-    anchor_lat = float(response[0]["lat"]) #y
-    anchor_lon = float(response[0]["lon"]) #x
+from io import BytesIO
+from matplotlib import pyplot as plt
+import numpy as np
+import matplotlib.image as mpimg
+from PIL import Image
+import requests
+from dataset import get_api_key
+import tkinter as tk
+from tkinter import simpledialog
+from easygui import *
+ 
 
-    #convert miles to lat degrees
-    r = radius / 69
+def get_coordinates_from_user_clicks(map_image):
+    coords = []
+    fig = plt.figure(figsize=(10,8))
 
-    coordinates = []
+    def on_click(event):
+        global ix, iy
 
-    for _ in range(n):
-        #latitude can be +- radius from the anchor lat
-        lat = anchor_lat + random.uniform(-r, r)
+        if event.inaxes:
+            ix, iy = event.xdata, event.ydata
+            print ('x = %d, y = %d'%(ix, iy))
+            coords.append((ix, iy))
 
-        # from circle eqn
-        delta_lon = math.sqrt(r**2 - (lat - anchor_lat)**2)
-        lon = anchor_lon + random.uniform(-delta_lon, delta_lon)
+        if len(coords) == 2:
+            fig.canvas.mpl_disconnect(cid)
+        return coords
 
-        zoom = random.randint(17, 20)
-        coordinates.append((lat, lon, zoom))
+    cid = plt.connect('button_press_event', on_click)
+    plt.imshow(map_image.rotate(180).transpose(method=Image.FLIP_LEFT_RIGHT), origin="lower")
+    plt.title("Click starting and ending point on map!")
+    plt.show()
 
-    #print(coordinates)
-    return coordinates
+    if len(coords) < 2:
+        return None
+    return coords
+
+def get_map_from_location(location, zoom, display=False):
+    url = "https://maps.googleapis.com/maps/api/staticmap?"
+    size = "640x640"
+    map_type = "hybrid"
+    api_key = get_api_key()
+
+    full_url = url + "center=" + location + "&zoom=" + str(zoom) + "&size=" + size + "&key=" + api_key + "&maptype=" + map_type
+    
+    r = requests.get(full_url)
+    img = Image.open(BytesIO(r.content))
+
+    if display:
+        plt.imshow(img)
+        plt.show()
+
+    return img
 
 
-def upload_to_cloud(c):
-    pass
+if __name__ == "__main__":
+    ROOT = tk.Tk()
+    ROOT.withdraw()
 
-locations = ["New York", "Boston"]
-coords = []
-for l in locations:
-    coords.extend(get_coords(l, n=10, radius=5))
-for c in coords:
-    upload_to_cloud(c)
+    location_default = 'Northeastern University'
+    zoom_default = 17
+
+    # the input dialogs
+    location = simpledialog.askstring(title="Location",
+                                    prompt="Enter a location:") or location_default
+    zoom = simpledialog.askinteger("Zoom", "Enter zoom level (between 17 and 20, inclusive)") or zoom_default
+
+    map = get_map_from_location(location, zoom, False)
+    coords = get_coordinates_from_user_clicks(map)
+
+    if (coords is None):
+        print("Must pick a starting and ending point!")
+    else:
+        start = coords[0]
+        end = coords[1]
+        print("Starting: " + str(start))
+        print("Ending: " + str(end))
