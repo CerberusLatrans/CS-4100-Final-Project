@@ -6,7 +6,6 @@ import torch
 from io import BytesIO
 from matplotlib import pyplot as plt
 import numpy as np
-import matplotlib.image as mpimg
 from PIL import Image
 import requests
 from dataset import get_api_key, get_map
@@ -48,16 +47,18 @@ def get_coordinates_from_user_clicks(map_image):
         if event.inaxes:
             ix, iy = event.xdata, event.ydata
             print ('x = %d, y = %d'%(ix, iy))
+            plt.plot(event.xdata, event.ydata, 'r*')
+            fig.canvas.draw_idle()
             coords.append((ix, iy))
 
         if len(coords) == 2:
             fig.canvas.mpl_disconnect(cid)
+            plt.pause(0.1)
             plt.close()
-        return coords
 
-    cid = plt.connect('button_press_event', on_click)
     plt.imshow(map_image.rotate(180).transpose(method=Image.FLIP_LEFT_RIGHT), origin="lower")
     plt.title("Click starting and ending point on map!")
+    cid = fig.canvas.mpl_connect('button_press_event', on_click)
     plt.show()
 
     if len(coords) < 2:
@@ -107,4 +108,4 @@ if __name__ == "__main__":
         print("Ending: " + str(end))
 
         # Do rest of the process
-        clean_map = get_map(location, zoom, 'clean', True)
+        #clean_map = get_map(location, zoom, 'clean', True)
