@@ -1,3 +1,8 @@
+from google.cloud import aiplatform
+import numpy as np
+from PIL import Image
+from model import ConvAE
+import torch
 from io import BytesIO
 from matplotlib import pyplot as plt
 import numpy as np
@@ -9,6 +14,28 @@ import tkinter as tk
 from tkinter import simpledialog
 from easygui import *
  
+PROJECT_NUMBER = "careful-striker-367620"
+ENDPOINT_ID = None
+
+#sends the image to the trained model endpoint and returns the output Image
+def denoise_cloud(input):
+    endpoint = aiplatform.Endpoint(
+        endpoint_name="projects/{PROJECT_NUMBER}/locations/us-central1/endpoints/{ENDPOINT_ID}")
+    x_test = np.asarray(input).astype(np.float32)
+    output = endpoint.predict(instances=x_test).predictions
+    output_image = Image.fromarray(output)
+
+    return output_image
+
+def denoise(input, weight_path):
+    x_test = np.asarray(input).astype(np.float32)
+    model = ConvAE(512)
+    model.load_state_dict(torch.load(weight_path))
+    model.eval()
+    output = model(x_test)
+    output_image = Image.fromarray(output)
+
+    return output_image
 
 def get_coordinates_from_user_clicks(map_image):
     coords = []
@@ -24,6 +51,7 @@ def get_coordinates_from_user_clicks(map_image):
 
         if len(coords) == 2:
             fig.canvas.mpl_disconnect(cid)
+            plt.close()
         return coords
 
     cid = plt.connect('button_press_event', on_click)
@@ -62,8 +90,8 @@ if __name__ == "__main__":
 
     # the input dialogs
     location = simpledialog.askstring(title="Location",
-                                    prompt="Enter a location:") or location_default
-    zoom = simpledialog.askinteger("Zoom", "Enter zoom level (between 17 and 20, inclusive)") or zoom_default
+                                    prompt="Enter a location:", initialvalue="Northeastern University") or location_default
+    zoom = simpledialog.askinteger("Zoom", "Enter zoom level (between 17 and 20, inclusive)", initialvalue=17) or zoom_default
 
     map = get_map_from_location(location, zoom, False)
     coords = get_coordinates_from_user_clicks(map)

@@ -33,12 +33,12 @@ def get_api_key():
     data = response.payload.data.decode("UTF-8")
     return data
 
-def get_map(center, zoom, type, display=False):
+def get_map(center, zoom, img_type, display=False):
     API_KEY = get_api_key()
     full_url = URL + "center=" + center + "&zoom=" + str(zoom) + "&size=" + SIZE + "&key=" + API_KEY
-    if (type == 'clean'):
+    if (img_type == 'clean'):
         full_url += "&map_id=" + MAP_ID 
-    if (type == 'dirty'):
+    if (img_type == 'dirty'):
         full_url += "&maptype=" + MAP_TYPE
     
     r = requests.get(full_url)
@@ -51,10 +51,10 @@ def get_map(center, zoom, type, display=False):
     return img
 
 
-def apply_canny(img, type, id, display=False):
+def apply_canny(img, img_type, id, display=False):
     """Applies canny filter to image"""
     img = cv.medianBlur(img,5)
-    if type == 'dirty':
+    if img_type == 'dirty':
 
         ret2,th2 = cv.threshold(img,0,255,cv.THRESH_BINARY+cv.THRESH_OTSU)
         # Otsu's thresholding after Gaussian filtering
@@ -66,7 +66,7 @@ def apply_canny(img, type, id, display=False):
         edges = cv.Canny(th2, 50, 250)
         
         edges2 = cv.Canny(img, 200, 400)
-    elif type == 'clean':
+    elif img_type == 'clean':
         edges = cv.Canny(img, 5, 10)
     else:
         raise Exception("type should be either 'clean' or 'dirty'")
@@ -79,10 +79,9 @@ def apply_canny(img, type, id, display=False):
         if type=="dirty":
             plt.imshow(edges2)
             plt.show()
-
-    file_name = f'images/canny/{type}/{id}.jpg'
-    #cv.imwrite(file_name, edges)
-
+    
+    file_name = f'images/canny/{img_type}/{id}.jpg'
+    cv.imwrite(file_name, edges)
     return file_name
 
 def upload_blob(source_file_name, destination_blob_name):
@@ -98,6 +97,8 @@ def upload_blob(source_file_name, destination_blob_name):
     print(
         f"File {source_file_name} uploaded to {destination_blob_name}."
     )
+
+    os.remove(source_file_name)
 
 def get_coords(id, location, n, radius):
     url = 'https://nominatim.openstreetmap.org/search/' + urllib.parse.quote(location) +'?format=json'
@@ -119,20 +120,22 @@ def get_coords(id, location, n, radius):
         lon = anchor_lon + random.uniform(-delta_lon, delta_lon)
 
         zoom = random.randint(17, 20)
-        coordinates.append((lat, lon, zoom, id))
+        coordinates.append((lat, lon, zoom, id)) # each coord is a tuple
 
     # print(coordinates)
     return coordinates
 
 if __name__ == "__main__":
-    locations = ["Northeastern University"]
+    locations = ["Northeastern University", "Jamaica New York", "Shackamaxon country club", "hillsborough middle school", "phoenixville", "baltimore", "severn maryland", "washington dc", "mayfair california", "maverik center utah", "riverton utah"]
     coords = []
     id = 0
-    for l in locations:
-        coords.extend(get_coords(id, l, n=20, radius=1))
+    for l in locations: # n used to be 20
+        #print(l)
+        coords.extend(get_coords(id, l, n=1000, radius=3))
         id = id + 1
 
-    temp_limit = 20
+    #print("Checkpoint")
+    limit = False
     count = 1
     for id, c in enumerate(coords):
         center = str(c[0]) + "," + str(c[1])
@@ -150,5 +153,5 @@ if __name__ == "__main__":
         upload_blob(canny_dirty_image, f"satellite_train/dirty_{id}.jpg")
 
         count = count + 1
-        if (count > temp_limit):
+        if (limit and count > limit):
             break
