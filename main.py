@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 from PIL import Image
 import requests
-from dataset import get_api_key, get_map
+from dataset import apply_canny, get_api_key, get_map
 import tkinter as tk
 from tkinter import simpledialog
 from easygui import *
@@ -94,7 +94,8 @@ if __name__ == "__main__":
     # the input dialogs
     location = simpledialog.askstring(title="Location",
                                     prompt="Enter a location:", initialvalue="Northeastern University") or location_default
-    zoom = simpledialog.askinteger("Zoom", "Enter zoom level (between 17 and 20, inclusive)", initialvalue=17) or zoom_default
+    zoom = simpledialog.askinteger(title="Zoom", prompt="Enter zoom level (between 17 and 20, inclusive)", initialvalue=17) or zoom_default
+    ROOT.destroy()
 
     map = get_map_from_location(location, zoom, False)
     coords = get_coordinates_from_user_clicks(map)
@@ -107,5 +108,11 @@ if __name__ == "__main__":
         print("Starting: " + str(start))
         print("Ending: " + str(end))
 
-        # Do rest of the process
-        #clean_map = get_map(location, zoom, 'clean', True)
+        """ Do rest of the process """
+        # Get clean map (without roads, labels, etc)
+        clean_map = get_map(location, zoom, 'clean', display=True)
+        
+        # Get canny for clean map
+        location_str = location.strip().replace(' ', '_').lower()
+        id = f'{location_str}_{zoom}'
+        canny_clean_image = apply_canny(clean_map, "clean", id, display=True)
