@@ -109,8 +109,8 @@ class ConvAE(torch.nn.Module):
         unflattened_size=(64, 7, 7))
 
         self.decoder_conv = torch.nn.Sequential(
-            torch.nn.ConvTranspose2d(64, 32, 16, 
-            stride=2, output_padding=1),
+            torch.nn.ConvTranspose2d(64, 32, 16, stride=2,
+            padding=1, output_padding=1),
             torch.nn.BatchNorm2d(32),
             torch.nn.ReLU(True),
             torch.nn.ConvTranspose2d(32, 16, 64, stride=2, 
@@ -118,21 +118,28 @@ class ConvAE(torch.nn.Module):
             torch.nn.BatchNorm2d(16),
             torch.nn.ReLU(True),
             torch.nn.ConvTranspose2d(16, 8, 64, stride=2, 
-            padding=1, output_padding=1),
+            padding=1, output_padding=0),
             torch.nn.BatchNorm2d(8),
             torch.nn.ReLU(True),
             torch.nn.ConvTranspose2d(8, 1, 64, stride=2, 
-            padding=1, output_padding=1)
+            padding=1, output_padding=0)
         )
     
     def forward(self, x):
         x = self.encoder_cnn(x)
+        print(x.shape)
         x = self.flatten(x)
+        print(x.shape)
         x = self.encoder_lin(x)
+        print(x.shape)
         x = self.decoder_lin(x)
+        print(x.shape)
         x = self.unflatten(x)
+        print(x.shape)
         x = self.decoder_conv(x)
+        print(x.shape)
         x = torch.sigmoid(x)
+        print(x.shape)
         return x
 
 # Model Initialization
