@@ -106,5 +106,5 @@ if __name__ == "__main__":
         print("Starting: " + str(start))
         print("Ending: " + str(end))
 
-    # Do rest of the process
-    clean_map = get_map(location, zoom, 'clean', True)
+        # Do rest of the process
+        clean_map = get_map(location, zoom, 'clean', True)
