@@ -35,6 +35,7 @@ def a_star(map, start, destination, heuristic):
 
     
     print("PATH NOT FOUND")
+    return curNode.path
 
 def getSuccessors(curNode, map):
     # note x is row y is column
@@ -43,8 +44,9 @@ def getSuccessors(curNode, map):
     listOfCoords = [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]
     for coord in listOfCoords: 
         curX, curY = coord
-        if curX >= 0 and curY >= 0 and curX < len(map) and curY < len(map[0]) and map[x][y]:  #it's black
+        if curX >= 0 and curY >= 0 and curX < len(map) and curY < len(map[0]) and map[curX][curY]:  #it's black
             successors.append(Node(coord, curNode.path + [coord]))
+            print(coord)
     return successors
 
 
@@ -53,25 +55,34 @@ def manhattanHeuristic(coord, destination):
     destX, destY = destination
     return abs(destX - coordX) + abs(destY - coordY)
 
-
-
 def euclideanHeuristic(coord, destination): 
     coordX, coordY = coord
     destX, destY = destination
     return ((coordX - destX) ** 2 + (coordY - destY) ** 2)** 0.5
 
-if __name__ == "__main__":
-    path = "images/canny/clean/17.jpg"
-    img = cv2.resize(cv2.imread(path), (250, 250))
+def run_search(image, resolution=250, start=[0,0], end=None, heuristic=euclideanHeuristic, display=False):
+    if end==None:
+        end = [resolution-1, resolution-1]
+    start = [start[1], start[0]]
+    end = [end[1], end[0]]
+    img = cv2.resize(image, (resolution, resolution))
     plt.imshow(img)
     plt.show()
-    bool_img = [[(lambda x : x[0] == x[1] == x[2] == 0)(p) for p in r] for r in img]
+    #bool_img = [[(lambda x : x[0] == x[1] == x[2] == 0)(p) for p in r] for r in img]
+    bool_img = [[(lambda x : x < 0.5)(p) for p in r] for r in img]
 
-    path = a_star(bool_img, [30, 60], [69, 160], euclideanHeuristic)
-    print(path)
+    path = a_star(bool_img, start, end, heuristic)
+    #print(path)
     for i,row in enumerate(img):
         for j, p in enumerate(row):
-            img[i][j] = [0, 255, 0] if [i, j] in path else p
+            img[i][j] = 1 if [i, j] in path else p
 
-    plt.imshow(img)
-    plt.show()
+    if display:
+        plt.imshow(img)
+        plt.show()
+    return path
+
+if __name__ == "__main__":
+    path = "images/canny/clean/northeastern_university_17.jpg"
+    run_search(cv2.imread(path), resolution=400, start=[100,65], end=[260, 215], heuristic=manhattanHeuristic, display=True)
+    

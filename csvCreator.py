@@ -24,6 +24,7 @@ data = {
         clean_list
 }
 
+
 df = pd.DataFrame(data) # Dataframe containing dirty and clean filenames according to GCS structure
 csv_data = df.to_csv('dataset.csv')
 upload_blob('dataset.csv', 'dataset.csv') # Uploads CSV to GCS

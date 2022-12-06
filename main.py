@@ -9,32 +9,41 @@ import numpy as np
 from PIL import Image
 import requests
 from dataset import apply_canny, get_api_key, get_map
+from search import run_search, euclideanHeuristic, manhattanHeuristic
 import tkinter as tk
 from tkinter import simpledialog
 from easygui import *
+import os
+import cv2
  
 PROJECT_NUMBER = "careful-striker-367620"
 ENDPOINT_ID = None
+
+PARAM_PATH = "model-output"
 
 #sends the image to the trained model endpoint and returns the output Image
 def denoise_cloud(input):
     endpoint = aiplatform.Endpoint(
         endpoint_name="projects/{PROJECT_NUMBER}/locations/us-central1/endpoints/{ENDPOINT_ID}")
-    x_test = np.asarray(input).astype(np.float32)
+    x_test = [np.asarray(input).astype(np.float32)]
     output = endpoint.predict(instances=x_test).predictions
     output_image = Image.fromarray(output)
 
     return output_image
 
-def denoise(input, weight_path):
-    x_test = np.asarray(input).astype(np.float32)
+def denoise(input, weight_path , show=False):
+    x_test = np.asarray([[input]]).astype(np.float32)
     model = ConvAE(512)
     model.load_state_dict(torch.load(weight_path))
     model.eval()
-    output = model(x_test)
+    output = model(torch.Tensor((x_test)))
+    output = np.squeeze(output.detach().numpy())
     output_image = Image.fromarray(output)
+    if show:
+        plt.imshow(output_image)
+        plt.show()
 
-    return output_image
+    return output
 
 # allow user to click starting and ending point on map
 def get_coordinates_from_user_clicks(map_image):
@@ -56,7 +65,7 @@ def get_coordinates_from_user_clicks(map_image):
             plt.pause(0.1)
             plt.close()
 
-    plt.imshow(map_image.rotate(180).transpose(method=Image.FLIP_LEFT_RIGHT), origin="lower")
+    plt.imshow(map_image)#map_image.rotate(180).transpose(method=Image.FLIP_LEFT_RIGHT), origin="lower")
     plt.title("Click starting and ending point on map!")
     cid = fig.canvas.mpl_connect('button_press_event', on_click)
     plt.show()
@@ -105,14 +114,46 @@ if __name__ == "__main__":
     else:
         start = coords[0]
         end = coords[1]
+
+        start = [start[0]/640, start[1]/640]
+        end = [end[0]/640, end[1]/640]
+
         print("Starting: " + str(start))
         print("Ending: " + str(end))
 
         """ Do rest of the process """
+        # Get and show dirty map without labels
+        dirty = get_map(location, zoom, 'dirty', display=True)
+
+        # Get and show canny applied to dirty map
+        dirty_edges_path = apply_canny(dirty, "dirty", "userInput", display=True)
+        dirty_edges = np.asarray(Image.open(dirty_edges_path))
+        os.remove(dirty_edges_path)
+
+        # Get and show denoising autoencoder applied
+        clean_edges = denoise(dirty_edges, PARAM_PATH)
+
+        # Run A* and show A* path on original image
+        res = 250
+        start = [int(start[0]*res), int(start[1]*res)]
+        end = [int(end[0]*res), int(end[1]*res)]
+
+        path = run_search(clean_edges, resolution=res, start=start, end=end,heuristic=euclideanHeuristic, display=True)
+
+        dirty = [[(lambda x : [x, x, x])(j) for j in row] for row in dirty]
+        for i,row in enumerate(dirty):
+            print(row)
+            for j, p in enumerate(row):
+                dirty[i][j] = [255, 0, 0] if [i, j] in path else p
+        
+        plt.imshow(dirty)
+        plt.show()
+
+        """
         # Get clean map (without roads, labels, etc)
         clean_map = get_map(location, zoom, 'clean', display=True)
         
         # Get canny for clean map
         location_str = location.strip().replace(' ', '_').lower()
         id = f'{location_str}_{zoom}'
-        canny_clean_image = apply_canny(clean_map, "clean", id, display=True)
+        canny_clean_image = apply_canny(clean_map, "clean", id, display=True)"""

@@ -94,9 +94,9 @@ def upload_blob(source_file_name, destination_blob_name):
 
     blob.upload_from_filename(source_file_name)
 
-    print(
-        f"File {source_file_name} uploaded to {destination_blob_name}."
-    )
+    #print(
+        #f"File {source_file_name} uploaded to {destination_blob_name}."
+    #)
 
     os.remove(source_file_name)
 
@@ -127,30 +127,32 @@ def get_coords(id, location, n, radius):
 
 if __name__ == "__main__":
     locations = ["Northeastern University", "Jamaica New York", "Shackamaxon country club", "hillsborough middle school", "phoenixville", "baltimore", "severn maryland", "washington dc", "mayfair california", "maverik center utah", "riverton utah"]
+    locations = ["washington dc", "mayfair california", "maverik center utah", "riverton utah"]
     coords = []
-    id = 0
+    start_idx = 6062
+    curr_id = 0
     for l in locations: # n used to be 20
-        #print(l)
-        coords.extend(get_coords(id, l, n=1000, radius=3))
-        id = id + 1
+        #print(id)
+        coords.extend(get_coords(curr_id, l, n=1000, radius=3))
+        curr_id += 1
 
     #print("Checkpoint")
     limit = False
     count = 1
-    for id, c in enumerate(coords):
-        center = str(c[0]) + "," + str(c[1])
-        zoom = c[2]
+    for idx, (lat, lon, zoom, id) in enumerate(coords):
+        center = str(lat) + "," + str(lon)
         #id = c[3]
+        coord_id = idx + start_idx
 
         """ Clean Map """
         clean_image = get_map(center, zoom, "clean", display=False)
-        canny_clean_image = apply_canny(clean_image, "clean", id, display=False)
-        upload_blob(canny_clean_image, f"clean_train/clean_{id}.jpg")
+        canny_clean_image = apply_canny(clean_image, "clean", coord_id, display=False)
+        upload_blob(canny_clean_image, f"clean_train/clean_{coord_id}.jpg")
 
         """ Dirty Map """
         dirty_image = get_map(center, zoom, "dirty", display=False)
-        canny_dirty_image = apply_canny(dirty_image, "dirty", id, display=False)
-        upload_blob(canny_dirty_image, f"satellite_train/dirty_{id}.jpg")
+        canny_dirty_image = apply_canny(dirty_image, "dirty", coord_id, display=False)
+        upload_blob(canny_dirty_image, f"satellite_train/dirty_{coord_id}.jpg")
 
         count = count + 1
         if (limit and count > limit):
