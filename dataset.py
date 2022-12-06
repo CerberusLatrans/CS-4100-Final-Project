@@ -42,13 +42,14 @@ def get_map(center, zoom, img_type, display=False):
         full_url += "&maptype=" + MAP_TYPE
     
     r = requests.get(full_url)
-    img = np.array(Image.open(BytesIO(r.content)))
+    img = Image.open(BytesIO(r.content))
+    img_arr = np.array(img)
 
     if display:
-        plt.imshow(cv.cvtColor(img, cv.COLOR_BGR2RGB))
+        plt.imshow(cv.cvtColor(img_arr, cv.COLOR_BGR2RGB))
         plt.show()
 
-    return img
+    return img_arr, img
 
 
 def apply_canny(img, img_type, id, display=False):
@@ -145,13 +146,13 @@ if __name__ == "__main__":
         coord_id = idx + start_idx
 
         """ Clean Map """
-        clean_image = get_map(center, zoom, "clean", display=False)
-        canny_clean_image = apply_canny(clean_image, "clean", coord_id, display=False)
+        clean_image_arr, clean_img = get_map(center, zoom, "clean", display=False)
+        canny_clean_image = apply_canny(clean_image_arr, "clean", coord_id, display=False)
         upload_blob(canny_clean_image, f"clean_train/clean_{coord_id}.jpg")
 
         """ Dirty Map """
-        dirty_image = get_map(center, zoom, "dirty", display=False)
-        canny_dirty_image = apply_canny(dirty_image, "dirty", coord_id, display=False)
+        dirty_image_arr, dirty_img = get_map(center, zoom, "dirty", display=False)
+        canny_dirty_image = apply_canny(dirty_image_arr, "dirty", coord_id, display=False)
         upload_blob(canny_dirty_image, f"satellite_train/dirty_{coord_id}.jpg")
 
         count = count + 1
