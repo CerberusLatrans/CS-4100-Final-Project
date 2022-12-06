@@ -19,7 +19,7 @@ import cv2
 PROJECT_NUMBER = "careful-striker-367620"
 ENDPOINT_ID = None
 
-PARAM_PATH = "model-output"
+PARAM_PATH = "model-output-one-hour"
 
 #sends the image to the trained model endpoint and returns the output Image
 def denoise_cloud(input):
@@ -142,7 +142,6 @@ if __name__ == "__main__":
 
         dirty = [[(lambda x : [x, x, x])(j) for j in row] for row in dirty]
         for i,row in enumerate(dirty):
-            print(row)
             for j, p in enumerate(row):
                 dirty[i][j] = [255, 0, 0] if [i, j] in path else p
         
