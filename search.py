@@ -67,6 +67,7 @@ def run_search(image, resolution=250, start=[0,0], end=None, heuristic=euclidean
     end = [end[1], end[0]]
     img = cv2.resize(image, (resolution, resolution))
     plt.imshow(img)
+    plt.title('Denoising autoencoder applied to map')
     plt.show()
     #bool_img = [[(lambda x : x[0] == x[1] == x[2] == 0)(p) for p in r] for r in img]
     bool_img = [[(lambda x : x < 0.5)(p) for p in r] for r in img]
@@ -79,6 +80,7 @@ def run_search(image, resolution=250, start=[0,0], end=None, heuristic=euclidean
 
     if display:
         plt.imshow(img)
+        plt.title('A* path on autoencoder image')
         plt.show()
     return path, found
 
