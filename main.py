@@ -56,7 +56,7 @@ def get_coordinates_from_user_clicks(map_image):
         if event.inaxes:
             ix, iy = event.xdata, event.ydata
             print ('x = %d, y = %d'%(ix, iy))
-            plt.plot(event.xdata, event.ydata, 'b*')
+            plt.plot(event.xdata, event.ydata, 'b*', markersize=10)
             fig.canvas.draw_idle()
             coords.append((ix, iy))
 
