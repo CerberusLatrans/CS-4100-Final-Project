@@ -56,7 +56,7 @@ def get_coordinates_from_user_clicks(map_image):
         if event.inaxes:
             ix, iy = event.xdata, event.ydata
             print ('x = %d, y = %d'%(ix, iy))
-            plt.plot(event.xdata, event.ydata, 'r*')
+            plt.plot(event.xdata, event.ydata, 'b*')
             fig.canvas.draw_idle()
             coords.append((ix, iy))
 
@@ -123,10 +123,10 @@ if __name__ == "__main__":
 
         """ Do rest of the process """
         # Get and show dirty map without labels
-        dirty = get_map(location, zoom, 'dirty', display=True)
+        dirty_img_arr, dirty_img = get_map(location, zoom, 'dirty', display=True)
 
         # Get and show canny applied to dirty map
-        dirty_edges_path = apply_canny(dirty, "dirty", "userInput", display=True)
+        dirty_edges_path = apply_canny(dirty_img_arr, "dirty", "userInput", display=True)
         dirty_edges = np.asarray(Image.open(dirty_edges_path))
         os.remove(dirty_edges_path)
 
@@ -138,22 +138,22 @@ if __name__ == "__main__":
         start = [int(start[0]*res), int(start[1]*res)]
         end = [int(end[0]*res), int(end[1]*res)]
 
-        path = run_search(clean_edges, resolution=res, start=start, end=end,heuristic=euclideanHeuristic, display=True)
+        path, found = run_search(clean_edges, resolution=res, start=start, end=end,heuristic=euclideanHeuristic, display=True)
 
-        dirty = [[(lambda x : [x, x, x])(j) for j in row] for row in dirty]
-        for i,row in enumerate(dirty):
-            print(row)
-            for j, p in enumerate(row):
-                dirty[i][j] = [255, 0, 0] if [i, j] in path else p
-        
-        plt.imshow(dirty)
+        # Scale x and y coordinates in path for 640x640 area
+        ratio = 650 / res 
+        x_coords = []
+        y_coords = []
+        for coord in path:
+            x_coords.append(coord[1] * ratio)
+            y_coords.append(coord[0] * ratio)
+
+        fig = plt.figure(figsize=(10,8))
+        plt.imshow(dirty_img)
+        plt.plot(x_coords, y_coords, color='blue', marker='.', linestyle='solid', linewidth=3, markersize=3) # Plot points connected by line
+        if found:
+            title_str = 'A path was found!'
+        else:
+            title_str = 'Sorry, no path was found :('
+        plt.title(title_str)
         plt.show()
-
-        """
-        # Get clean map (without roads, labels, etc)
-        clean_map = get_map(location, zoom, 'clean', display=True)
-        
-        # Get canny for clean map
-        location_str = location.strip().replace(' ', '_').lower()
-        id = f'{location_str}_{zoom}'
-        canny_clean_image = apply_canny(clean_map, "clean", id, display=True)"""

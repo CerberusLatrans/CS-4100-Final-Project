@@ -26,7 +26,7 @@ def a_star(map, start, destination, heuristic):
             explored.append(curNode.coordinate)
             if curNode.coordinate == destination:
                 print("FOUND")
-                return curNode.path
+                return curNode.path, True
             else: 
                 for neighbor in getSuccessors(curNode, map):
                 #each neighbor is a (successor,action, stepCost)
@@ -35,7 +35,7 @@ def a_star(map, start, destination, heuristic):
 
     
     print("PATH NOT FOUND")
-    return curNode.path
+    return curNode.path, False
 
 def getSuccessors(curNode, map):
     # note x is row y is column
@@ -71,7 +71,7 @@ def run_search(image, resolution=250, start=[0,0], end=None, heuristic=euclidean
     #bool_img = [[(lambda x : x[0] == x[1] == x[2] == 0)(p) for p in r] for r in img]
     bool_img = [[(lambda x : x < 0.5)(p) for p in r] for r in img]
 
-    path = a_star(bool_img, start, end, heuristic)
+    path, found = a_star(bool_img, start, end, heuristic)
     #print(path)
     for i,row in enumerate(img):
         for j, p in enumerate(row):
@@ -80,7 +80,7 @@ def run_search(image, resolution=250, start=[0,0], end=None, heuristic=euclidean
     if display:
         plt.imshow(img)
         plt.show()
-    return path
+    return path, found
 
 if __name__ == "__main__":
     path = "images/canny/clean/northeastern_university_17.jpg"
