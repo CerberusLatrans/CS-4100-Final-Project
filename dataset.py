@@ -46,6 +46,7 @@ def get_map(center, zoom, img_type, display=False):
     img_arr = np.array(img)
 
     if display:
+        plt.title('Dirty map without labels')
         plt.imshow(cv.cvtColor(img_arr, cv.COLOR_BGR2RGB))
         plt.show()
 
@@ -75,6 +76,7 @@ def apply_canny(img, img_type, id, display=False):
     #bw, _ = cv.threshold(edges, 200, 255, cv.THRESH_BINARY)
     #bw = cv.cvtColor(edges, )
     if display:
+        plt.title(f'Canny applied to {img_type} map')
         plt.imshow(edges)
         plt.show()
         if type=="dirty":
