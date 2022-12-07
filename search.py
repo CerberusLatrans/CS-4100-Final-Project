@@ -70,16 +70,18 @@ def run_search(image, resolution=250, start=[0,0], end=None, heuristic=euclidean
     plt.title('Denoising autoencoder applied to map')
     plt.show()
     #bool_img = [[(lambda x : x[0] == x[1] == x[2] == 0)(p) for p in r] for r in img]
-    bool_img = [[(lambda x : x < 0.5)(p) for p in r] for r in img]
+    bool_img = [[(lambda x : x < 0.001)(p) for p in r] for r in img]
 
     path, found = a_star(bool_img, start, end, heuristic)
+
+    bool_img_bw = [[(lambda x : [0, 0, 0] if x else [255, 255, 255])(p) for p in r] for r in bool_img]
     #print(path)
-    for i,row in enumerate(img):
+    for i,row in enumerate(bool_img_bw):
         for j, p in enumerate(row):
-            img[i][j] = 1 if [i, j] in path else p
+            bool_img_bw[i][j] = [0, 0, 255] if [i, j] in path else p
 
     if display:
-        plt.imshow(img)
+        plt.imshow(bool_img_bw)
         plt.title('A* path on autoencoder image')
         plt.show()
     return path, found
