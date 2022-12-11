@@ -70,7 +70,7 @@ def run_search(image, resolution=250, start=[0,0], end=None, heuristic=euclidean
     plt.title('Denoising autoencoder applied to map')
     plt.show()
     #bool_img = [[(lambda x : x[0] == x[1] == x[2] == 0)(p) for p in r] for r in img]
-    bool_img = [[(lambda x : x < 0.001)(p) for p in r] for r in img]
+    bool_img = [[(lambda x : x < 0.57)(p) for p in r] for r in img]
 
     path, found = a_star(bool_img, start, end, heuristic)
 

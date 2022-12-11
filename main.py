@@ -19,7 +19,7 @@ import cv2
 PROJECT_NUMBER = "careful-striker-367620"
 ENDPOINT_ID = None
 
-PARAM_PATH = "parameters/model-output-entire-dataset-1-epoch"
+PARAM_PATH = "parameters/model-output-bce-15x-whole-dataset-1-epoch"
 
 #sends the image to the trained model endpoint and returns the output Image
 def denoise_cloud(input):
